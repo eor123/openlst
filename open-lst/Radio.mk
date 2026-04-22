@@ -67,8 +67,6 @@ define RADIO_template
 	$(Q)$(CC) $(RADIO_LDFLAGS) $($(1)_LDFLAGS) $($(1)_CFLAGS) $(RADIO_CFLAGS) $$^ -o $$@
 	@echo
 	@echo Memory usage summary for $$@:
-	$(Q)tail -n5 $(1)_radio.mem
-	$(Q)grep ^Stack $(1)_radio.mem
 	@echo
 
  # Rule to assemble objects for the radio
