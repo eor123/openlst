@@ -72,6 +72,19 @@ void board_led_set(__bit led_on);
 // Frequency synthesizer calibration — SmartRF value for 915MHz
 #define RF_FSCAL3_CONFIG 0xE9
 
+// ── TX Power Configuration ─────────────────────────────────────────────────
+// CC1110 PA_TABLE0 output power setting
+// CC1190 PA adds ~18 dBm on top of CC1110 output
+//
+// SELECT ONE:
+//   0xC0 = ~0 dBm  CC1110 → ~18 dBm total  — BENCH / INDOOR TESTING
+//   0xC2 = ~10 dBm CC1110 → ~28 dBm total  — FIELD / HAB MISSION
+//
+// The ground station Build + Flash workflow patches this value
+// automatically based on the RF Power Mode selection — no manual
+// editing required. Default is bench safe (0xC0).
+#define RF_PA_CONFIG 0xC0
+
 // ── Bootloader timeout — increased for RF OTA flashing ────────────────────
 // Default 45000 (~20ms) is too short for RF round trip latency
 // At 27MHz with ~12 cycles per loop iteration:
