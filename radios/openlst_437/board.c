@@ -7,6 +7,14 @@
 #include "uart0.h"
 #endif
 
+// ── RF Power Mode Flag ─────────────────────────────────────────────────────
+// Set at boot by reading PA_TABLE0 register (set by RF_PA_CONFIG in board.h)
+// Controls CC1190 HGM pin via P2_0 during TX:
+//   1 = high gain mode → ~+27 dBm total (CC1110 0xC2 + CC1190 high gain)
+//   0 = low gain mode  → ~+10 dBm total (CC1110 0xC0 + CC1190 low gain)
+// Ground station 0dBm/Max buttons flash different firmware → sets this flag
+__bit _rf_high_gain = 0;  // default bench safe until board_init() runs
+
 // ── Board initialization ───────────────────────────────────────────────────
 void board_init(void) {
 	// LED0 setup - just turn it on
@@ -18,10 +26,17 @@ void board_init(void) {
 	P0SEL &= ~(1<<7);  // GPIO not peripheral
 	P0DIR |= 1<<7;     // Output not input
 
-	// Power amplifier bias control on P2.0
+	// CC1190 HGM control on P2.0 (CC1110 Pin 14)
+	// Connected to CC1190 Pin 6 (HGM) on SCK-915 rev 2+
+	// HIGH = high gain mode (+27 dBm), LOW = low gain mode (+10 dBm)
 	P2SEL &= ~(1<<0);  // GPIO not peripheral
-	P2DIR |= 1<<0;     // Output not input
-	P2_0 = 0;
+	P2DIR |=  (1<<0);  // Output not input
+
+	// Read PA_TABLE0 to determine power mode flashed by ground station
+	// RF_PA_CONFIG 0xC2 = field/HAB/LEO → HGM HIGH
+	// RF_PA_CONFIG 0xC0 = bench/indoor  → HGM LOW
+	_rf_high_gain = (PA_TABLE0 == 0xC2) ? 1 : 0;
+	P2_0 = 0;  // start LOW — board_pre_tx() sets HGM when TX fires
 
 	// ── CC1190 RF Front End Control ───────────────────────────────────────
 	//
